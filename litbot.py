@@ -1,4 +1,5 @@
 import asyncio
+from email import message
 import urllib.request as url
 import json
 import fuzzysearch as fs
@@ -38,7 +39,7 @@ class Quotes(commands.Cog):
         file.close()
         return quotes
 
-    @commands.command()
+    @commands.command(description = "If you include a word or phrase following the command, I will search my list of snazzy quotes for the closest match (sometimes I make mistakes!). If you don't, I will give you one at random.")
     async def quote(self, ctx, *args):
         try:
             if len(args) == 0:
@@ -92,7 +93,7 @@ class Quotes(commands.Cog):
             print(e)
             await ctx.send("Sorry, I can't find any quotes like that in my library :/")
 
-    @commands.command()
+    @commands.command(description = "I will add your quote to my snazzy quotes library! Be sure to include the entire quote as well as the source when you use this command!")
     async def addquote(self, ctx, quote):
         affirmitaves = ["yes", "ye", "y", "yeah", "yeah!", "yes!", "sure", "sure!"]
         author = ctx.author
@@ -133,7 +134,7 @@ your continued willingness to play with her, even when you don't feel like it.''
 nod, a half-told anecdote, an enigmatic 'I know the feeling'—which you place into conversations like those little flags that warn diggers of something buried underground: maybe a cable that secretly powers your house, maybe a fiber-optic link to some foreign country.''' ,"silience":  "n. the kind of unnoticed excellence that carries on around you every day, unremarkably—the hidden talents of friends and coworkers, the fleeting solos of subway buskers, the slapdash eloquence of anonymous users, the unseen portfolios of aspiring artists—which would be renowned as masterpieces if only they’d been appraised by the cartel of popular taste, who assume that brilliance is a rare and precious quality, accidentally overlooking buried jewels that may not be flawless but are still somehow perfect.", "slipcast":  "n. the default expression that your face automatically reverts to when idle— amused, melancholic, pissed off—which occurs when a strong emotion gets buried and forgotten in the psychological laundry of everyday life, leaving you wearing an unintentional vibe of pink or blue or gray, or in rare cases, a tie-dye of sheer madness.", "sonder":  "n. the realization that each random passerby is living a life as vivid and complex as your own—populated with their own ambitions, friends, routines, worries and inherited craziness—an epic story that continues invisibly around you like an anthill sprawling deep underground, with elaborate passageways to thousands of other lives that you’ll never know existed, in which you might appear only once, as an extra sipping coffee in the background, as a blur of traffic passing on the highway, as a lighted window at dusk.", "swish fulfillment" :"n. the feeling of delicate luck after casually tossing something across the room and hitting your target so crisply and perfectly that you feel no desire to even attempt another shot, which is a more compelling argument for the concept of monogamous love than anything sung to a guitar.", "the tilt shift": "n. a phenomenon in which your lived experience seems oddly inconsequential once you put it down on paper, which turns an epic tragicomedy into a sequence of figures on a model train set, assembled in their tiny classrooms and workplaces, wandering along their own cautious and well-trodden paths— peaceable, generic and out of focus.", "trumspringa":  "n. the temptation to step off your career track and become a shepherd in the mountains, following your flock between pastures with a sheepdog and a rifle, watching storms at dusk from the doorway of a small cabin, just the kind of hypnotic diversion that allows your thoughts to make a break for it and wander back to their cubicles in the city.", "vellichor":  "n. the strange wistfulness of used bookstores, which are somehow infused with the passage of time—filled with thousands of old books you’ll never have time to read, each of which is itself locked in its own era, bound and dated and papered over like an old room the author abandoned years ago, a hidden annex littered with thoughts left just as they were on the day they were captured.", "vemödalen":  "n. the frustration of photographing something amazing when thousands of identical photos already exist—the same sunset, the same waterfall, the same curve of a hip, the same closeup of an eye—which can turn a unique subject into something hollow and pulpy and cheap, like a mass-produced piece of furniture you happen to have assembled yourself.", "waldosia":  "n. [Brit. wallesia] a condition characterized by scanning faces in a crowd looking for a specific person who would have no reason to be there, which is your brain's way of checking to see whether they're still in your life, subconsciously patting its emotional pockets before it leaves for the day.", "wytai":  "n. a feature of modern society that suddenly strikes you as absurd and grotesque—from zoos and milk-drinking to organ transplants, life insurance, and fiction—part of the faint background noise of absurdity that reverberates from the moment our ancestors first crawled out of the slime but could not for the life of them remember what they got up to do.", "xeno":  "n. the smallest measurable unit of human connection, typically exchanged between passing strangers—a flirtatious glance, a sympathetic nod, a shared laugh about some odd coincidence—moments that are fleeting and random but still contain powerful emotional nutrients that can alleviate the symptoms of feeling alone.", "Zielschmerz":  "n. the exhilarating dread of finally pursuing a lifelong dream, which requires you to put your true abilities out there to be tested on the open savannah, no longer protected inside the terrarium of hopes and delusions that you created in kindergarten and kept sealed as long as you could, only to break in case of 'emergency'"}
     def __init__(self, bot):
         self.bot = bot
-    @commands.command(name = "def")
+    @commands.command(name = "def", description = "I will search the Merriam-Webster Dictionary, as well as The Dictionary of Obscure Sorrows, and tell you the common definitions of the word you ask about.")
     async def define(self, ctx, word):
         if str(word) in self.obscure_sorrows_dict:
             await ctx.send(self.obscure_sorrows_dict[str(word)])
@@ -158,8 +159,8 @@ nod, a half-told anecdote, an enigmatic 'I know the feeling'—which you place i
             print("Error: " + str(e))
             await ctx.send("Sorry, that word is currently not in my dictionary!")
 
-    @commands.command()
-    async def ent(self, ctx, word):
+    @commands.command(description = "If the word in question is defined in the Merriam-Webster dictionary, I will tell you the basic etymology!")
+    async def ety(self, ctx, word):
         call = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/" + word + "?key=" + self.dictAPI 
         word = url.urlopen(call)
         body = word.read()
@@ -175,7 +176,7 @@ nod, a half-told anecdote, an enigmatic 'I know the feeling'—which you place i
         return
 
     
-    @commands.command()
+    @commands.command(description = "I will show you synonyms of the word you ask for! If the word has multiple definitions, I will ask you which you meant.")
     async def syns(self, ctx, word):
         author = ctx.author
         call = "https://www.dictionaryapi.com/api/v3/references/thesaurus/json/" + word + "?key=" + self.thesAPI 
@@ -218,7 +219,8 @@ nod, a half-told anecdote, an enigmatic 'I know the feeling'—which you place i
             message.append(body[0]["meta"]["syns"][0][i])
         await ctx.send(','.join(message).replace("[","").replace("]",""))
         return
-    @commands.command()
+
+    @commands.command(description = "I will give you a list of words in The Dictionary of Obscure Sorrows! You can also add a number to your command to get only the first (that number) sorrows from the list.")
     async def sorrows(self, ctx, amount = len(obscure_sorrows_dict)):
             sorrows = list(self.obscure_sorrows_dict.keys())
             trunc_sorrows = sorrows[:amount]
@@ -227,7 +229,7 @@ nod, a half-told anecdote, an enigmatic 'I know the feeling'—which you place i
 
 class Maintenance(commands.Cog):
     
-    help_dict = []
+   
 
     def __init__(self, bot):
         self.bot = bot
@@ -239,18 +241,25 @@ class Maintenance(commands.Cog):
         else:
             await bot.process_commands(message)
 
-    @commands.command()
-    async def help(self, ctx):
-        text = ""
-        print("helping")
+    @commands.command(description = "This command shows you the current list of commands you have access to! You can also use it to get information on a specific command.")
+    async def help(self, ctx, com = "None"):
+        print(com)
+        if com == "None":
+            text = "This is the list of commands that I currently respond to! Use !help 'command' (without quotes) to get info about a specific command." + '\n'
+            for command in self.bot.commands:
+                text += '!'+ str(command) + '\n'
+            await ctx.send(text)
+            return
         for command in self.bot.commands:
-            text += '!'+ str(command) + '\n'
-            print(text)
+            print(str(command))
+            if str(command) == com:
+                com = command
+                break
+        text = "!" + str(com) + ": " + com.description
         await ctx.send(text)
-    
         return
     
-    @commands.command(name = "naptime")
+    @commands.command(name = "naptime", description = "This command puts me to sleep, in case something goes wrong. Only Azazel can use it, since only he can wake me back up.")
     @commands.is_owner()
     async def shutdown(self, ctx):
        
@@ -259,6 +268,11 @@ class Maintenance(commands.Cog):
         print("Goodnight!")
         return
 
+    @commands.command(description = "I will tell you a bit about myself!")
+    async def sayhi(self, ctx):
+        author = ctx.author
+        await ctx.send("Hey there, " + str(author) + "! My name is Jax, and I'm here to help the Rosulae read and write literature! I have a number of abilities (use !help to see what I can do!) that will be useful for us. Azazel named me after the digient Jax, from Ted Chiang's short-story *The Lifecycle of Software Objects*. I hope to be just as lovable as he was!")
+        return
 class WOTD():
     word = ""
     definition = ""
@@ -276,7 +290,7 @@ class Rosulae_Material(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(description = "I'll search through the poems posted to this server and fetch the one that most closely matches your request. This takes me some time, but Azazel is working to make it faster!")
     async def poem(self, ctx, *args):
         await ctx.send("One moment, please!")
         titles = open("rosulae_poems/rosulae_poem_titles.txt", "r+")
