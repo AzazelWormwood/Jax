@@ -1,5 +1,4 @@
 import asyncio
-from email import message
 import urllib.request as url
 import json
 import fuzzysearch as fs
@@ -7,6 +6,8 @@ import random as rand
 import re
 from nextcord.ext import commands
 from configparser import ConfigParser as cp
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 
 config = cp()
 config.read("litbot_config.ini")
@@ -106,8 +107,9 @@ class Quotes(commands.Cog):
         
         try:
          msg = await bot.wait_for("message", check=check, timeout=30) # 30 seconds to reply
-         if msg.content in affirmitaves:
+         if msg.content.lower() in affirmitaves:
             file = open("quotes.txt", 'a', encoding = "utf8")
+            file.write('\n')
             file.write('\n')
             file.write(quote)
             file.close()    
@@ -234,12 +236,7 @@ class Maintenance(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @bot.event
-    async def on_message(message):
-        if bot.user.mentioned_in(message):
-            await message.channel.send("Hi! My name is Jax. Azazel created me to provide this server with some useful functionality. Use \"!help\" to see what I can do!")
-        else:
-            await bot.process_commands(message)
+
 
     @commands.command(description = "This command shows you the current list of commands you have access to! You can also use it to get information on a specific command.")
     async def help(self, ctx, com = "None"):
@@ -298,12 +295,12 @@ class Rosulae_Material(commands.Cog):
         links = open("rosulae_poems/rosulae_poem_links.txt", "a")
         title_pattern = r"(\*\*)(\w|\W|\s)+(\*\*)"
         search = " ".join(args)
-        channel = self.bot.get_channel(self.poems_channel_ID)
-        messages = await ctx.channel.history(limit = 9999).flatten()
+        poem_chan = self.bot.get_channel(int(self.poems_channel_ID))
+        messages = await poem_chan.history(limit = 9999).flatten()
         title = ""
         
         for msg in messages:
-            print("Working...")
+           
             if search.lower() in msg.content.lower() and "**" in msg.content and msg.author != self.bot.user:
                 title = re.search(title_pattern, msg.content)
                 if title.group(0) not in titles.read():
@@ -320,7 +317,69 @@ class Rosulae_Material(commands.Cog):
         print("Done!")
         return
 
+class Spotify(commands.Cog):
+    les_rosulae_playlist = config["Spotify"]["les_rosulae_playlist"]
+    spot_API = config["Spotify"]["spotify_API"]
+    secret = config["Spotify"]["secret"]
 
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(description = "I will search for your song on Spotify, and if you so desire, add it to the Les Rosulae playlist!")
+    async def addsong(self, ctx, *args):
+        credentials = SpotifyOAuth(self.spot_API, self.secret, scope = 'playlist-modify-public', redirect_uri = 'https://localhost/')
+        song = " ".join(args)
+        
+        sp = spotipy.Spotify(auth_manager = credentials)
+        result = sp.search(song)
+        title = result["tracks"]["items"][0]["name"]
+        artist = result["tracks"]["items"][0]["artists"][0]["name"]
+        link = result["tracks"]["items"][0]["external_urls"]["spotify"]
+        await ctx.send("I found " + title + ", by " + artist + ". Would you like to add it to the Rosulae playlist?")
+        
+        affirmitaves = ["yes", "ye", "y", "yeah", "yeah!", "yes!", "sure", "sure!"]
+        author = ctx.author
+        
+        def check(msg):
+            return msg.author == ctx.author and msg.channel == ctx.channel
+    
+        
+        try:
+         msg = await bot.wait_for("message", check=check, timeout=30) # 30 seconds to reply
+         if msg.content.lower() in affirmitaves:
+            linklist = [link]
+            sp.playlist_add_items(self.les_rosulae_playlist, linklist)
+            await ctx.send("Song successfully added :)")
+            return
+         else:
+             await ctx.send("I won't add it, then!")
+             return
+        except asyncio.TimeoutError:
+            await ctx.send(f"You left me hanging! :( {author.mention}")
+            return
+
+    @commands.command(description = "I will give you a random song from the Les Rosulae playlist!")
+    async def song(self, ctx, *args):
+        credentials = spotipy.SpotifyClientCredentials(self.spot_API, self.secret) 
+        sp = spotipy.Spotify(auth_manager = credentials)
+        playlist = sp.playlist(self.les_rosulae_playlist)
+        names = []
+        ids = []
+        links = []
+        artists = []
+        for i in range(len(playlist["tracks"]["items"])):
+            names.append(playlist["tracks"]["items"][i]["track"]["name"])
+            ids.append(playlist["tracks"]["items"][i]["track"]["id"])
+            artists.append(playlist["tracks"]["items"][i]["track"]["artists"][0]["name"])
+            links.append(playlist["tracks"]["items"][i]["track"]["external_urls"]["spotify"])
+            
+      
+        song = rand.choice(names)
+        index = names.index(song)
+        artist = artists[index]
+        link = links[index]
+        await ctx.send(song + " - " + artist + " " + link)
+        return
 
 
 
@@ -328,6 +387,7 @@ bot.add_cog(Quotes(bot))
 bot.add_cog(Dictionary(bot))
 bot.add_cog(Maintenance(bot))
 bot.add_cog(Rosulae_Material(bot))
+bot.add_cog(Spotify(bot))
 
 bot.run(discord_API)
 
